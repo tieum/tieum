@@ -12,25 +12,28 @@ jobs:
       - name: get the png from the start of the current year
         run: |
           d=$(date +%Y-01-01)
-          #while [ "$d" != "$(date +%Y-%m-%d)" ]
-          mkdir png
-          while [ "$d" != "2023-01-10" ]
+          while [ "$d" != "$(date +%Y-%m-%d)" ]
           do
             png=graph-$d.png
-            if [[ ! -e png/$png ]] #don't redownload already saved dates
+            if [[ -e png/$png ]] #don't redownload already saved dates
             then
+              echo "$png already downloaded"
+            else
               echo -n "downloading $png.." && curl --silent https://atuin.bluegreen.sh/graph/tieum/$d --output png/$png && \
               [[ ! -s png/$png ]] && (echo "empty file, deleting" && rm png/$png) || echo downloaded
-              d=$(date -I -d "$d + 1 day")
             fi
+            d=$(date -I -d "$d + 1 day")
           done
       - name: make a gif from the pngs
         run: convert -delay 10 -loop 1 png/*.png shell.history.gif
       - name: save it
         run: |
-          git config --global user.name 'tieum'
-          git config --global user.email 'tieum@users.noreply.github.com'
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
-          git add png/*.png
-          git commit -am "update shell.history.gif"
-          git push
+          if [[ -n $(git status --porcelain) ]] #we only commit/push if something changed
+          then
+            git config --global user.name 'tieum'
+            git config --global user.email 'tieum@users.noreply.github.com'
+            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
+            git add png/*.png
+            git commit -am "[auto] update shell.history.gif"
+            git push
+          fi
