@@ -25,15 +25,21 @@ jobs:
             d=$(date -I -d "$d + 1 day")
           done
       - name: make a gif from the pngs
-        run: convert -delay 10 -loop 1 png/*.png shell.history.gif
-      - name: save it
+        id: convert
+        continue-on-error: true
         run: |
-          if [[ -n $(git status --porcelain) ]] #we only commit/push if something changed
+          if [[ -n $(git status --porcelain) ]] #no point wasting cpu if nothing changed
           then
-            git config --global user.name 'tieum'
-            git config --global user.email 'tieum@users.noreply.github.com'
-            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
-            git add png/*.png
-            git commit -am "[auto] update shell.history.gif"
-            git push
+            convert -delay 10 -loop 1 png/*.png shell.history.gif
+          else
+            exit 1
           fi
+      - name: save it
+        if: steps.convert.outcome== 'success'
+        run: |
+          git config --global user.name 'tieum'
+          git config --global user.email 'tieum@users.noreply.github.com'
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
+          git add png/*.png
+          git commit -am "[auto] update shell.history.gif"
+          git push
