@@ -12,7 +12,7 @@ jobs:
       - name: get the png from the start of the current year
         run: |
           d=$(date +%Y-01-01)
-          while [ "$d" != "$(date +%Y-%m-%d)" ]
+          while [ "$d" != "$(date +%Y-%m-%d)" ] #loop until today - 1 
           do
             png=graph-$d.png
             if [[ -e png/$png ]] #don't redownload already saved dates
@@ -34,7 +34,7 @@ jobs:
           else
             exit 1
           fi
-      - name: save it
+      - name: save new pngs & resulting gif
         if: steps.convert.outcome== 'success'
         run: |
           git config --global user.name 'tieum'
