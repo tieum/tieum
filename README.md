@@ -1,1 +1,1 @@
-<img src="./shell.history.gif">
+<!--img src="./shell.history.gif"-->
